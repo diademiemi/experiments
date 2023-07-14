@@ -29,6 +29,28 @@ function add_alias() {
     exec_in_container ln -sf "$device" "$DEV_ROOT/$alias"
 }
 
+function find_device_directory() {
+    local kernels=$1
+    local device_directory=""
+    local device_name=""
+    
+    # Iterate over each kernel value
+    IFS=', ' read -ra kernel_array <<< "$kernels"
+    for kernel in "${kernel_array[@]}"; do
+        # Find the corresponding device directory in /sys/devices
+        device_directory=$(find "/sys/devices" -name "$kernel" | head -n 1)
+        if [[ -n "$device_directory" ]]; then
+            # Traverse further to find the directory named ttyUSB#
+            device_name=$(find "$device_directory" -name "ttyUSB*" -type d -printf "%f\n" | head -n 1)
+            if [[ -n "$device_name" ]]; then
+                break
+            fi
+        fi
+    done
+    
+    echo "$device_name"
+}
+
 function sync_device_aliases() {
     if [[ $DEBUG -eq 1 ]]; then
         echo "Synchronizing device aliases..."
@@ -42,10 +64,12 @@ function sync_device_aliases() {
                 echo "Processing udev rule: $line"
             fi
             
-            # Extract the alias name from the line
+            # Extract the alias name and kernels from the line
             local alias=$(echo "$line" | awk -F'"' '{ print $6 }')
+            local kernels=$(echo "$line" | awk -F'"' '{ print $4 }')
             if [[ $DEBUG -eq 1 ]]; then
                 echo "Found alias: $alias"
+                echo "Kernels: $kernels"
             fi
             
             # Check if the device alias exists in $DEV_ROOT on the host
@@ -59,14 +83,17 @@ function sync_device_aliases() {
                 continue
             fi
             
-            # Get the linked device from the alias
-            local device=$(readlink "$DEV_ROOT/$alias")
-            if [[ $DEBUG -eq 1 ]]; then
-                echo "Linked device for alias $alias: $device"
+            # Find the device directory based on the kernels
+            local device_name=$(find_device_directory "$kernels")
+            if [[ -z "$device_name" ]]; then
+                if [[ $DEBUG -eq 1 ]]; then
+                    echo "Failed to find the device directory for kernels: $kernels"
+                fi
+                continue
             fi
             
-            # Add the device alias to the container
-            add_alias "$alias" "$device"
+            # Create the symlink using the device name
+            add_alias "$alias" "$DEV_ROOT/$device_name"
         fi
     done < "$UDEV_RULES_FILE"
     

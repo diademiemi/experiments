@@ -12,12 +12,13 @@ services:
       - /dev/bus/usb
     device_cgroup_rules:
       - 'c 180:* rmw'
+      - 'c 188:* rmw'
     privileged: true
     volumes:
       - ./serial-devices-test/config.yaml:/config/config.yaml
     depends_on:
       - host
-    # command: ["/bin/bash", "-c", "while true; do sleep 1; done"]
+    command: ["/bin/bash", "-c", "while true; do sleep 1; done"]
 
   host:
     build:
