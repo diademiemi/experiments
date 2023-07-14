@@ -1,0 +1,2 @@
+{% for device in devices %}
+ACTION=="add", KERNELS=="{{ device.kernel_address }}", SYMLINK+="{{ device.symlink }}"

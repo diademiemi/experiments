@@ -1,0 +1,89 @@
+---
+- name: Install requirements
+  tags: packages
+  hosts: all, localhost
+  tasks:
+    - name: Install libudev-dev
+      become: true
+      ansible.builtin.apt:
+        name: libudev-dev
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Install libudev-devel
+      become: true
+      ansible.builtin.yum:
+        name: libudev-devel
+        state: present
+      when: ansible_os_family == 'RedHat'
+
+    - name: Install systemd-libs
+      become: true
+      community.general.pacman:
+        name: systemd-libs
+        state: present
+      when: ansible_os_family == 'Archlinux'
+
+    - name: Install libudev-devel
+      become: true
+      community.general.zypper:
+        name: libudev-devel
+        state: present
+      when: ansible_os_family == 'Suse'
+
+- name: Set up udev rules
+  tags: udev
+  hosts: all, localhost
+  vars:
+    devices:
+      - kernel_address: "5-1.1.1"
+        symlink: "usb1"
+      - kernel_address: "5-1.1.2"
+        symlink: "usb2"
+      - kernel_address: "5-1.1.3"
+        symlink: "usb3"
+      - kernel_address: "5-1.1.4"
+        symlink: "usb4"
+  handlers:
+    - name: Reload udev rules
+      become: true
+      ansible.builtin.command: udevadm control --reload-rules && udevadm trigger
+      register: udev_reload
+      changed_when:
+        - udev_reload.rc == 0
+        - udev_rules is defined and udev_rules is changed
+
+  tasks:
+    - name: Copy over udev rules
+      become: true
+      ansible.builtin.template:
+        src: "99-docker-test.rules.j2"
+        dest: "/etc/udev/rules.d/99-docker-test.rules"
+        owner: root
+        group: root
+        mode: "0644"
+      register: udev_rules
+      notify: Reload udev rules
+
+- name: Remove udev rules
+  tags: remove, never
+  hosts: all, localhost
+  handlers:
+    - name: Reload udev rules
+      become: true
+      ansible.builtin.command: udevadm control --reload-rules && udevadm trigger
+      register: udev_reload
+      changed_when:
+        - udev_reload.rc == 0
+        - udev_rules is defined and udev_rules is changed
+
+  tasks:
+    - name: Remove udev rules
+      become: true
+      ansible.builtin.file:
+        path: "/etc/udev/rules.d/99-docker-test.rules"
+        state: absent
+      register: udev_rules
+      notify: Reload udev rules
+
+...

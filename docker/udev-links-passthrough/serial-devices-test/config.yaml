@@ -1,0 +1,12 @@
+---
+serial_devices:
+  - dev: /dev/usb1
+    baud_rate: 115200
+  - dev: /dev/usb2
+    baud_rate: 115200
+  - dev: /dev/usb3
+    baud_rate: 115200
+  - dev: /dev/usb4
+    baud_rate: 115200
+
+...
