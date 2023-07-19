@@ -18,3 +18,5 @@ I would consider this failed, as it is not a solution I would use in practice, e
 
 # Testing
 I wrote a quick and dirty Rust project to monitor TTY device symlinks and return their output. This allows me to plug in some ESP32s and press the reset button to see if the output still works after plugging and unplugging devices in different orders.  
+
+I use the `docker-compose.yml` file to build the image and run the container. The script is also ran by this file as a "container" that executes the command on the host (or else it wouldn't be able to access the devices). This is not how I would do it in practice, but this is a portable way to test it.
