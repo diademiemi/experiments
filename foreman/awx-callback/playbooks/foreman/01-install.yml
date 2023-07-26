@@ -63,5 +63,7 @@
         --foreman-proxy-plugin-discovery-install-images=true
       register: output
       changed_when: output.rc == 0
+      args:
+        creates: /etc/foreman
 
 ...

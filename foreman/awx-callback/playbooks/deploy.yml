@@ -1,4 +1,41 @@
 ---
+- name: Deploy Terraform project
+  hosts: localhost
+  tasks:
+    - name: Reset VMs
+      tags: terraform, reset, never
+      cloud.terraform.terraform:
+        project_path: "{{ lookup('env', 'PWD') }}/terraform"
+        state: absent
+        force_init: true
+        variables_files:
+          - "{{ lookup('env', 'PWD') }}/terraform/vars/vars.tfvars"
+      register: rancher_terraform
+
+    - name: Create VMs
+      tags: terraform, create, always
+      cloud.terraform.terraform:
+        project_path: "{{ lookup('env', 'PWD') }}/terraform"
+        state: present
+        force_init: true
+        variables_files:
+          - "{{ lookup('env', 'PWD') }}/terraform/vars/vars.tfvars"
+      register: rancher_terraform
+
+    - name: Refresh inventory
+      tags: terraform, inventory, always
+      ansible.builtin.meta: refresh_inventory
+
+- name: Verify connection
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Wait for SSH
+      tags: terraform, ssh, always
+      ansible.builtin.wait_for_connection:
+        delay: 5
+        timeout: 300
+
 - name: Install AWX
   tags: awx, always
   ansible.builtin.import_playbook: awx/deploy.yml

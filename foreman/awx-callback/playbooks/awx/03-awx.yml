@@ -2,12 +2,6 @@
 - name: Set up RKE2
   hosts: awx
   gather_facts: true
-  # vars:
-    # awx_version: "2.3.0"
-    # awx_operator_release_name: "awx-operator"
-    # awx_namespace: "awx"
-    # awx_name: "awx-deployment"
-    # awx_service_type: "ClusterIP"
   pre_tasks:
     - name: Ensure Python pip is installed
       ansible.builtin.package:

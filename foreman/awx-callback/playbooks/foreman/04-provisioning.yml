@@ -53,7 +53,7 @@
       vars:
         regex_query: "\\s*[0-9]+\\s*,\\s*{{ item.1 }}\\s*"
 
-    - name: Link
+    - name: Link provisioning templates to OS
       become: true
       ansible.builtin.command: |
         hammer os update \
@@ -61,7 +61,7 @@
         --provisioning-templates "{{ foreman_os_provisioning_templates | join(',') }}"
       changed_when: false
 
-    - name: Set templates as default with set-default-template
+    - name: Set templates as default for the OS
       become: true
       ansible.builtin.command: |
         hammer os set-default-template \
