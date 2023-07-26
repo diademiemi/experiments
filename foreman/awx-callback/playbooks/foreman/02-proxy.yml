@@ -1,0 +1,90 @@
+- name: Set up DHCP, DNS TFTP
+  hosts: foreman
+  handlers:
+    - name: Restart dhcpd
+      become: true
+      ansible.builtin.service:
+        name: isc-dhcp-server
+        state: restarted
+
+    - name: Restart dns
+      become: true
+      ansible.builtin.service:
+        name: named
+        state: restarted
+
+  tasks:
+    - name: Install DHCP, DNS and TFTP
+      become: true
+      ansible.builtin.apt:
+        name:
+          - isc-dhcp-server
+          - tftp-hpa
+          - bind9
+        state: present
+
+    - name: Enable DHCP server
+      ansible.builtin.service:
+        name: isc-dhcp-server
+        enabled: true
+        state: started
+
+    - name: Configure DNS
+      become: true
+      ansible.builtin.template:
+        src: named.conf.options.j2
+        dest: /etc/bind/named.conf.options
+        owner: root
+        group: bind
+        mode: "0644"
+      notify:
+        - Restart dns
+
+    - name: Configure zone
+      become: true
+      ansible.builtin.template:
+        src: zone.j2
+        dest: "/etc/bind/named.zone.{{ dns_domain }}"
+        owner: root
+        group: bind
+        mode: "0644"
+      notify:
+        - Restart dns
+
+    - name: Place zone db
+      become: true
+      ansible.builtin.template:
+        src: zone.db.j2
+        dest: "/var/cache/bind/{{ dns_domain }}.db"
+        owner: root
+        group: bind
+        mode: "0644"
+      notify:
+        - Restart dns
+
+    - name: Flush handlers
+      ansible.builtin.meta: flush_handlers
+
+    - name: Setup DHCP, TFTP and Ansible
+      become: true
+      ansible.builtin.command: |
+        foreman-installer \
+        --enable-foreman-proxy \
+        --foreman-proxy-dhcp=true \
+        --foreman-proxy-dhcp-gateway={{ dhcp_option_routers }} \
+        --foreman-proxy-dhcp-range="{{ dhcp_range }}" \
+        --foreman-proxy-dhcp-nameservers="{{ dhcp_option_domain_name_servers }}" \
+        --foreman-proxy-dhcp-omapi-port=7911 \
+        --foreman-proxy-dhcp-ping-free-ip=true \
+        --foreman-proxy-dhcp-provider=isc \
+        --foreman-proxy-dhcp-server="127.0.0.1" \
+        --foreman-proxy-dhcp-interface="{{ ansible_default_ipv4.interface }}" \
+        --foreman-proxy-tftp=true \
+        --foreman-proxy-tftp-listen-on=https \
+        --foreman-proxy-tftp-servername="{{ ansible_default_ipv4.address }}" \
+        --enable-foreman-plugin-ansible \
+        --enable-foreman-proxy-plugin-ansible
+      register: output
+      changed_when: output.rc == 0
+
+...

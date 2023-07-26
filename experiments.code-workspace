@@ -1,0 +1,41 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"ansible.python.interpreterPath": "/bin/python3",
+		"files.associations": {
+			"**/tasks/**/*.yml": "ansible",
+			"**/vars/**/*.yml": "ansible",
+			"**/molecule/*.yml": "ansible",
+			"**/molecule/molecule.yml": "ansible",
+			"**/handlers/**/*.yml": "ansible",
+			"**/defaults/*.yml": "ansible",
+			"**/host_vars/**/*.yml": "ansible",
+			"**/group_vars/**/*.yml": "ansible",
+			"**/inventories/*.yml": "ansible",
+			"**/meta/*.yml": "ansible",
+			"**/requirements.yml": "ansible",
+			"**/terraform/**": "terraform",
+			"**/inventories/terraform/**": "ansible"
+		},
+		"yaml.schemas": {
+			"https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json#/$defs/playbook": [
+				"file:///mnt/files/Projects/Code_Dumps/experiments/foreman/awx-callback/playbooks/awx/deploy.yml",
+				"file:///mnt/files/Projects/Code_Dumps/experiments/foreman/awx-callback/playbooks/foreman/deploy.yml"
+			]
+		}
+	},
+	"extensions": {
+		"recommendations": [
+			"redhat.ansible",
+			"redhat.vscode-yaml",
+			"hashicorp.terraform",
+			"GitHub.copilot",
+			"GitLab.gitlab-workflow",
+			"yzhang.markdown-all-in-one"
+		]
+	}
+}

@@ -1,0 +1,27 @@
+---
+- name: Refresh apt cache
+  hosts: foreman
+  tags: apt, always
+  tasks:
+    - name: Refresh apt cache
+      become: true
+      ansible.builtin.apt:
+        update_cache: true
+
+- name: Install Foreman
+  tags: foreman, install, always
+  ansible.builtin.import_playbook: 01-install.yml
+
+- name: Install Foreman Proxy services
+  tags: foreman, foreman-proxy, always
+  ansible.builtin.import_playbook: 02-proxy.yml
+
+- name: Configure Foreman
+  tags: foreman, configure, always
+  ansible.builtin.import_playbook: 03-configure.yml
+
+- name: Configure provisioning
+  tags: foreman, provisioning, always
+  ansible.builtin.import_playbook: 04-provisioning.yml
+
+...

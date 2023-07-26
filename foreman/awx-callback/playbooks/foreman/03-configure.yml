@@ -1,0 +1,132 @@
+- name: Configure Foreman
+  hosts: foreman
+  handlers:
+    - name: Build PXE Default
+      ansible.builtin.command: |
+        hammer template build-pxe-default
+      changed_when: true
+
+  tasks:
+    - name: Setup subnet
+      become: true
+      ansible.builtin.command: |
+        hammer subnet create \
+        --name {{ foreman_network_name }} \
+        --network {{ foreman_network_netid }} \
+        --mask {{ foreman_network_mask }} \
+      register: output
+      changed_when: output.rc == 0
+      failed_when: output.rc != 0 and "Name has already been taken" not in output.stderr
+      notify: Build PXE Default
+
+    - name: Show subnet info
+      become: true
+      ansible.builtin.command: |
+        hammer subnet info \
+          --name {{ foreman_network_name }}
+      changed_when: false
+      register: subnet_before
+
+    - name: Update subnet
+      become: true
+      ansible.builtin.command: |
+        hammer subnet update \
+        --name {{ foreman_network_name }} \
+        --network {{ foreman_network_netid }} \
+        --mask {{ foreman_network_mask }} \
+        --dns-primary {{ foreman_network_primary_dns }} \
+        --gateway {{ foreman_network_gateway }} \
+        --domains {{ foreman_network_domain }} \
+        --tftp {{ foreman_network_tftp_name }} \
+        --dhcp {{ foreman_network_dhcp_name }} \
+        --from {{ foreman_network_range_start }} \
+        --to {{ foreman_network_range_end }} \
+        --boot-mode {{ foreman_network_boot_mode }} \
+      register: output
+      changed_when: false
+
+    - name: Return whether subnet changed
+      ansible.builtin.command: |
+        hammer subnet info \
+          --name {{ foreman_network_name }}
+      register: subnet_after
+      changed_when: subnet_before.stdout != subnet_after.stdout
+      notify: Build PXE Default
+
+    - name: Setup OS
+      become: true
+      ansible.builtin.command: |
+        hammer os create \
+        --name {{ foreman_os_name }} \
+        --major {{ foreman_os_major }} \
+        --family {{ foreman_os_family }} \
+        --release-name {{ foreman_os_release_name }} \
+        --architectures {{ foreman_os_architectures }} \
+        --media "{{ foreman_os_media }}" \
+        --partition-tables "{{ foreman_os_partition_tables }}" \
+        --provisioning-templates "{{ foreman_os_provisioning_templates | join(',') }}" \
+      register: output
+      changed_when: output.rc == 0
+      failed_when: output.rc != 0 and "Title has already been taken" not in output.stderr
+      notify: Build PXE Default
+
+    - name: Create hostgroup
+      become: true
+      ansible.builtin.command: |
+        hammer hostgroup create \
+        --name {{ foreman_hostgroup_name }}
+      register: output
+      changed_when: output.rc == 0
+      failed_when: output.rc != 0 and "Name has already been taken" not in output.stderr
+      notify: Build PXE Default
+
+    - name: Show hostgroup info
+      become: true
+      ansible.builtin.command: |
+        hammer hostgroup info \
+          --name {{ foreman_hostgroup_name }}
+      changed_when: false
+      register: hostgroup_before
+
+    - name: Update hostgroup
+      become: true
+      ansible.builtin.command: |
+        hammer hostgroup update \
+        --name {{ foreman_hostgroup_name }} \
+        --domain {{ foreman_hostgroup_domain }} \
+        --subnet {{ foreman_hostgroup_subnet }} \
+        --architecture {{ foreman_hostgroup_architecture }} \
+        --operatingsystem "{{ foreman_hostgroup_operatingsystem }}" \
+        --medium "{{ foreman_hostgroup_medium }}" \
+        --partition-table "{{ foreman_hostgroup_partition_table }}" \
+        --pxe-loader "{{ foreman_hostgroup_pxe_loader }}" \
+        --root-password "{{ foreman_hostgroup_root_pass }}"
+      register: output
+      changed_when: false
+      notify: Build PXE Default
+
+    - name: Return whether hostgroup changed
+      ansible.builtin.command: |
+        hammer hostgroup info \
+          --name {{ foreman_hostgroup_name }}
+      register: hostgroup_after
+      changed_when: hostgroup_before.stdout != hostgroup_after.stdout
+      notify: Build PXE Default
+
+    - name: Force download discovery image
+      become: true
+      ansible.builtin.get_url:
+        url: "{{ foreman_discovery_image_url }}"
+        dest: /srv/tftp
+        mode: "0644"
+
+    - name: Extract discovery image
+      become: true
+      ansible.builtin.unarchive:
+        src: /srv/tftp/fdi-image-latest.tar
+        dest: /srv/tftp/boot
+        remote_src: true
+        creates: /srv/tftp/boot/fdi-image
+      notify: Build PXE Default
+
+...

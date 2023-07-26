@@ -1,0 +1,23 @@
+---
+- name: Refresh apt cache
+  hosts: awx
+  tags: apt, always
+  tasks:
+    - name: Refresh apt cache
+      become: true
+      ansible.builtin.apt:
+        update_cache: true
+
+- name: Install K3S
+  tags: k3s, always
+  ansible.builtin.import_playbook: 01-k3s.yml
+
+- name: Install Kubernetes requisites
+  tags: requisites, always
+  ansible.builtin.import_playbook: 02-requisites.yml
+
+- name: Deploy AWX
+  tags: awx, always
+  ansible.builtin.import_playbook: 03-awx.yml
+
+...
