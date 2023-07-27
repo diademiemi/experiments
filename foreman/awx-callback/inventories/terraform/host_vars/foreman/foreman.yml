@@ -1,26 +1,30 @@
 ---
-foreman_initial_location: "Testing"
-foreman_initial_organization: "Testing"
-foreman_initial_admin_username: "admin"
-foreman_initial_admin_password: "admin"
+foreman_initial_admin_username: "{{ foreman_username }}"
+foreman_initial_admin_password: "{{ foreman_password }}"
 
-foreman_server_url: "https://127.0.0.1"
-foreman_username: "{{ foreman_initial_admin_username }}"
-foreman_password: "{{ foreman_initial_admin_password }}"
+foreman_awx_username: "{{ awx_username }}"
+foreman_awx_password: "{{ awx_password }}"
+foreman_awx_host: "{{ awx_url }}"
+foreman_awx_job_template_name: "{{ job_template_name }}"
+
+foreman_server_url: "https://foreman.terraform.test"
+foreman_server_username: "{{ foreman_username }}"
+foreman_server_password: "{{ foreman_password }}"
 foreman_validate_certs: false
+
+foreman_domain_name: "{{ dns_domain }}"
 
 foreman_network_name: "PXE"
 foreman_network_boot_mode: "DHCP"
-
 foreman_network_netid: "{{ foreman_network | ansible.utils.ipaddr('network') }}"
 foreman_network_mask: "{{ foreman_network | ansible.utils.ipaddr('netmask') }}"
 foreman_network_primary_dns: "{{ dhcp_option_domain_name_servers | split(' ') | first }}"
 foreman_network_domains:
   - "{{ dhcp_option_domain_name }}"
 foreman_network_gateway: "{{ dhcp_option_routers | split(' ') | first }}"
-
 foreman_network_dhcp_name: "{{ ansible_fqdn }}"
 foreman_network_tftp_name: "{{ ansible_fqdn }}"
+foreman_network_dns_name: "{{ ansible_fqdn }}"
 
 foreman_network_range_start: "{{ dhcp_range | split(' ') | first }}"
 foreman_network_range_end: "{{ dhcp_range | split(' ') | last }}"
@@ -31,6 +35,7 @@ foreman_os_major: "20.04"
 foreman_os_family: "Debian"
 foreman_os_architectures: "x86_64"
 foreman_os_media: "Ubuntu mirror"
+foreman_os_password_hash: "SHA512"
 foreman_os_partition_tables:
   - "Preseed default"
 
@@ -41,9 +46,15 @@ foreman_os_provisioning_templates:
     kind: "provision"
   - name: "Preseed default finish"  # Post-install setup, e.g. root password
     kind: "finish"
+  - name: "Linux host_init_config default" # Host configuration
+    kind: "host_init_config"
+  - name: "Preseed Autoinstall cloud-init user data"  # Create users
+    kind: "user_data"
+  - name: "Global Registration"
+    kind: "registration"
 
 foreman_hostgroup_name: "pxe_booted"
-foreman_hostgroup_domain: "{{ foreman_network_domain }}"
+foreman_hostgroup_domain: "{{ foreman_network_domains[0] }}"
 foreman_hostgroup_subnet: "{{ foreman_network_name }}"
 foreman_hostgroup_architecture: "x86_64"
 foreman_hostgroup_operatingsystem: "{{ foreman_os_name }} {{ foreman_os_major }}"
@@ -51,6 +62,35 @@ foreman_hostgroup_medium: "{{ foreman_os_media }}"
 foreman_hostgroup_partition_table: "{{ foreman_os_partition_tables | first }}"
 foreman_hostgroup_pxe_loader: "PXELinux BIOS"
 foreman_hostgroup_root_pass: "rootroot"
+foreman_hostgroup_parameters:
+  - name: "skip-puppet-setup"
+    value: true
+    parameter_type: "boolean"
+  - name: "ansible_tower_provisioning"
+    value: true
+    parameter_type: "boolean"
+  - name: "ansible_tower_fqdn"
+    value: "awx.terraform.test"
+    parameter_type: "string"
+  - name: "ansible_host_config_key"
+    value: "secret"
+    parameter_type: "string"
+  - name: "username_to_create"
+    value: "{{ system_user }}"
+    parameter_type: "string"
+  - name: "password_to_create"
+    value: "{{ system_password }}"
+    parameter_type: "string"
+  - name: "host_packages"
+    value: curl
+    parameter_type: "string"
+
+foreman_hostgroup_parameters_ansible_job_id: "{{ foreman_hostgroup_parameters +
+  [{'name': 'ansible_job_id', 'value': ansible_job_id, 'parameter_type': 'integer'}] }}"
+ansible_job_id: "{{ lookup('awx.awx.controller_api',
+      'job_templates',
+      query_params={'name': foreman_awx_job_template_name},
+      host=foreman_awx_host, username=foreman_awx_username, password=foreman_awx_password, verify_ssl=False).id | int }}"
 
 foreman_discovery_image_url: "http://downloads.theforeman.org/discovery/releases/3.5/fdi-image-latest.tar"
 

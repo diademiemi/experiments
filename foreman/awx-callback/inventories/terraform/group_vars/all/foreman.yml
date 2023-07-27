@@ -1,0 +1,9 @@
+---
+foreman_initial_location: "Testing"
+foreman_initial_organization: "Testing"
+foreman_location_name: "{{ foreman_initial_location }}"
+foreman_organization_name: "{{ foreman_initial_organization }}"
+
+foreman_bare_metal_hostgroup_name: "BareMetal"
+
+...

@@ -4,8 +4,4 @@ k3s_role: "master"
 
 kubeconfig_path: /etc/rancher/k3s/k3s.yaml
 
-awx_hostname: "awx.terraform.local"
-
-awx_admin_password: "admin"
-
 ...

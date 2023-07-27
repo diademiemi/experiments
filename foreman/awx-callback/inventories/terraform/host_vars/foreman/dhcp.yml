@@ -7,6 +7,6 @@ dhcp_range: "{{ foreman_network | ansible.utils.ipaddr('100') | ansible.utils.ip
 
 dhcp_option_bootfile_next_server: "192.168.21.51"
 dhcp_option_domain_name_servers: "{{ ansible_default_ipv4.address }}"
-dhcp_option_domain_name: "terraform.local"
+dhcp_option_domain_name: "terraform.test"
 
 ...

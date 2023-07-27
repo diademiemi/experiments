@@ -61,8 +61,6 @@
         --foreman-initial-admin-password '{{ foreman_initial_admin_password }}' \
         --enable-foreman-plugin-discovery \
         --foreman-proxy-plugin-discovery-install-images=true
-      register: output
-      changed_when: output.rc == 0
       args:
         creates: /etc/foreman
 

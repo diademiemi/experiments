@@ -1,5 +1,5 @@
 zone "{{ dns_domain }}" IN {
          type master;
          file "{{ dns_domain }}.db";
-         allow-update { none; };
+         allow-update { key rndc-key; };
 };

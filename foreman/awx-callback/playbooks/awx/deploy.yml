@@ -1,4 +1,13 @@
 ---
+- name: Refresh apt cache
+  tags: apt, cache, always
+  hosts: awx
+  tasks:
+    - name: Refresh apt cache
+      become: true
+      ansible.builtin.apt:
+        update_cache: true
+      changed_when: false
 
 - name: Install K3S
   tags: k3s, always

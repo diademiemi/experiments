@@ -1,5 +1,5 @@
 ---
-dns_domain: "terraform.local"
+dns_domain: "terraform.test"
 
 dns_forwarders:
   - "9.9.9.9"
@@ -10,5 +10,7 @@ dns_records: |
   ns1 IN A {{ ansible_default_ipv4.address }}
   foreman IN A {{ ansible_default_ipv4.address }}
   awx IN A 192.168.21.51
+
+dns_reverse_zone: "21.168.192.in-addr.arpa"
 
 ...

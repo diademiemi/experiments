@@ -1,0 +1,87 @@
+---
+- name: Configure AWX
+  hosts: awx
+  module_defaults:
+    group/awx.awx.controller:
+      controller_host: "{{ controller_host }}"
+      controller_username: "{{ controller_username }}"
+      controller_password: "{{ controller_password }}"
+      validate_certs: "{{ controller_validate_certs }}"
+
+  tasks:
+    - name: Create AWX organization
+      awx.awx.organization:
+        name: "{{ awx_organization_name }}"
+        description: "{{ awx_organization_description }}"
+        state: present
+      retries: 60  # Wait until AWX is up
+      delay: 10
+      until: awx_organization is success
+      register: awx_organization
+
+    - name: Create AWX project
+      awx.awx.project:
+        name: "{{ awx_project_name }}"
+        description: "{{ awx_project_description }}"
+        scm_type: "{{ awx_project_scm_type }}"
+        scm_url: "{{ awx_project_scm_url }}"
+        scm_branch: "{{ awx_project_scm_branch }}"
+        organization: "{{ awx_project_organization }}"
+        state: present
+
+    - name: Create AWX Foreman Credential
+      awx.awx.credential:
+        name: "{{ awx_foreman_credential_name }}"
+        description: "{{ awx_foreman_credential_description }}"
+        credential_type: "{{ awx_foreman_credential_type }}"
+        inputs:
+          username: "{{ awx_foreman_credential_foreman_username }}"
+          password: "{{ awx_foreman_credential_foreman_password }}"
+          host: "{{ awx_foreman_credential_foreman_host }}"
+        organization: "{{ awx_foreman_credential_organization }}"
+        state: present
+
+    - name: Create AWX Inventory
+      awx.awx.inventory:
+        name: "{{ awx_inventory_name }}"
+        description: "{{ awx_inventory_description }}"
+        organization: "{{ awx_inventory_organization }}"
+        state: present
+
+    - name: Create AWX Inventory Source
+      awx.awx.inventory_source:
+        name: "{{ awx_inventory_source_name }}"
+        description: "{{ awx_inventory_source_description }}"
+        inventory: "{{ awx_inventory_source_inventory }}"
+        source: "{{ awx_inventory_source_source }}"
+        source_vars: "{{ awx_inventory_source_source_vars | default(omit) }}"
+        credential: "{{ awx_inventory_source_credential }}"
+        update_on_launch: "{{ awx_inventory_source_update_on_launch }}"
+        organization: "{{ awx_inventory_source_organization }}"
+        state: present
+
+    - name: Create machine credential
+      awx.awx.credential:
+        name: "{{ awx_machine_credential_name }}"
+        description: "{{ awx_machine_credential_description }}"
+        credential_type: "{{ awx_machine_credential_type }}"
+        inputs:
+          username: "{{ awx_machine_credential_username }}"
+          password: "{{ awx_machine_credential_password }}"
+        organization: "{{ awx_machine_credential_organization }}"
+        state: present
+
+    - name: Create AWX job template
+      awx.awx.job_template:
+        name: "{{ awx_job_template_name }}"
+        description: "{{ awx_job_template_description }}"
+        project: "{{ awx_job_template_project }}"
+        playbook: "{{ awx_job_template_playbook }}"
+        inventory: "{{ awx_job_template_inventory }}"
+        credential: "{{ awx_job_template_credential }}"
+        job_type: "{{ awx_job_template_job_type }}"
+        host_config_key: "{{ awx_job_template_host_config_key | default(omit) }}"
+        organization: "{{ awx_job_template_organization }}"
+        state: present
+
+...

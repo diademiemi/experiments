@@ -113,13 +113,6 @@
       ansible.builtin.setup:
       when: inventory_hostname != 'localhost'
 
-    - name: Refresh apt cache
-      become: true
-      ansible.builtin.apt:
-        update_cache: true
-      changed_when: false
-      when: inventory_hostname != 'localhost'
-
     - name: Add hostname entries
       tags: terraform, hosts, never
       ignore_errors: true
@@ -161,12 +154,16 @@
 # The plays below deploy the various components
 ###
 
+- name: Install Foreman
+  tags: foreman, always
+  ansible.builtin.import_playbook: foreman/deploy.yml
+
 - name: Install AWX
   tags: awx, always
   ansible.builtin.import_playbook: awx/deploy.yml
 
-- name: Install Foreman
-  tags: foreman, always
-  ansible.builtin.import_playbook: foreman/deploy.yml
+- name: Run tasks that depend on both Foreman and AWX
+  tags: awx, foreman, always
+  ansible.builtin.import_playbook: combined/deploy.yml
 
 ...

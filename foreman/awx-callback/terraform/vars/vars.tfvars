@@ -1,4 +1,4 @@
-domain       = "terraform.local"
+domain       = "terraform.test"
 network      = "192.168.21.0/24"
 network_name = "foreman"
 network_mode = "nat"
@@ -20,7 +20,7 @@ vms = [
     allow_root_ssh_pwauth = true
     ssh_keys              = []
 
-    domain = "terraform.local"
+    domain = "terraform.test"
 
     network_interfaces = [
       {
@@ -33,6 +33,7 @@ vms = [
         gateway = "192.168.21.1"
 
         nameservers = [
+          "192.168.21.50",
           "9.9.9.9",
           "1.1.1.1"
         ]
@@ -61,7 +62,7 @@ vms = [
     allow_root_ssh_pwauth = true
     ssh_keys              = []
 
-    domain = "terraform.local"
+    domain = "terraform.test"
 
     network_interfaces = [
       {
@@ -74,8 +75,7 @@ vms = [
         gateway = "192.168.21.1"
 
         nameservers = [
-          "9.9.9.9",
-          "1.1.1.1"
+          "192.168.21.50"
         ]
       }
     ]

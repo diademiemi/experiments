@@ -1,0 +1,62 @@
+---
+awx_hostname: "awx.terraform.test"
+awx_admin_password: "admin"
+
+awx_dns_server: "{{ dns_server }}"
+
+controller_host: "{{ awx_hostname }}"
+controller_username: "admin"
+controller_password: "{{ awx_admin_password }}"
+controller_validate_certs: false
+
+awx_organization_name: "Testing"
+awx_organization_description: "Testing"
+
+awx_project_name: "Experiments"
+awx_project_organization: "{{ awx_organization_name }}"
+awx_project_description: "Project for experiments"
+awx_project_scm_type: "git"
+awx_project_scm_url: "https://github.com/diademiemi/experiments.git"
+awx_project_scm_branch: "main"
+
+awx_foreman_credential_name: "Foreman"
+awx_foreman_credential_organization: "{{ awx_organization_name }}"
+awx_foreman_credential_description: "To access the Foreman host"
+awx_foreman_credential_type: "Red Hat Satellite 6"
+awx_foreman_credential_foreman_username: "admin"
+awx_foreman_credential_foreman_password: "admin"
+awx_foreman_credential_foreman_host: "{{ foreman_url }}"
+
+awx_inventory_name: "Foreman"
+awx_inventory_organization: "{{ awx_organization_name }}"
+awx_inventory_description: "Inventory for Foreman hosts"
+
+awx_inventory_source_name: "Foreman"
+awx_inventory_source_organization: "{{ awx_organization_name }}"
+awx_inventory_source_description: "Inventory source for Foreman hosts"
+awx_inventory_source_inventory: "{{ awx_inventory_name }}"
+awx_inventory_source_source: "satellite6"
+awx_inventory_source_credential: "{{ awx_foreman_credential_name }}"
+awx_inventory_source_update_on_launch: true
+awx_inventory_source_source_vars:
+  validate_certs: false
+  host_filters: 'hostgroup="{{ foreman_bare_metal_hostgroup_name }}"'
+
+awx_job_template_name: "{{ job_template_name }}"
+awx_job_template_organization: "{{ awx_organization_name }}"
+awx_job_template_description: "Job template to test running Ansible on a host that has been provisioned by Foreman"
+awx_job_template_project: "{{ awx_project_name }}"
+awx_job_template_playbook: "foreman/awx-callback/awx/playbooks/example.yml"
+awx_job_template_inventory: "Foreman"
+awx_job_template_credential: "{{ awx_machine_credential_name }}"
+awx_job_template_job_type: "run"
+awx_job_template_host_config_key: "secret"
+
+awx_machine_credential_name: "Hosts"
+awx_machine_credential_organization: "{{ awx_organization_name }}"
+awx_machine_credential_description: "User created by Foreman provisioning"
+awx_machine_credential_type: "Machine"
+awx_machine_credential_username: "{{ system_user }}"
+awx_machine_credential_password: "{{ system_password }}"
+
+...
