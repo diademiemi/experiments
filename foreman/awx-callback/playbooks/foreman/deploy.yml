@@ -1,13 +1,4 @@
 ---
-- name: Refresh apt cache
-  hosts: foreman
-  tags: apt, always
-  tasks:
-    - name: Refresh apt cache
-      become: true
-      ansible.builtin.apt:
-        update_cache: true
-
 - name: Install Foreman
   tags: foreman, install, always
   ansible.builtin.import_playbook: 01-install.yml

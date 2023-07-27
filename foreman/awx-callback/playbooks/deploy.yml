@@ -113,6 +113,13 @@
       ansible.builtin.setup:
       when: inventory_hostname != 'localhost'
 
+    - name: Refresh apt cache
+      become: true
+      ansible.builtin.apt:
+        update_cache: true
+      changed_when: false
+      when: inventory_hostname != 'localhost'
+
     - name: Add hostname entries
       tags: terraform, hosts, never
       ignore_errors: true
