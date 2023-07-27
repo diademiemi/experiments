@@ -87,6 +87,6 @@
       register: output
       changed_when: output.rc == 0
       args:
-        creates: /srv/tftpboot/pxelinux.0
+        creates: /srv/tftp/pxelinux.0
 
 ...
