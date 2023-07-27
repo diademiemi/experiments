@@ -1,5 +1,12 @@
 - name: Configure Foreman
   hosts: foreman
+  module_defaults:
+    group/theforeman.foreman.foreman:
+      server_url: "{{ foreman_server_url }}"
+      username: "{{ foreman_username }}"
+      password: "{{ foreman_password }}"
+      validate_certs: "{{ foreman_validate_certs }}"
+
   handlers:
     - name: Build PXE Default
       ansible.builtin.command: |
@@ -7,110 +14,64 @@
       changed_when: true
 
   tasks:
-    - name: Setup subnet
+    - name: Setup subnet  # noqa args[module]
+      theforeman.foreman.subnet:
+        name: "{{ foreman_network_name }}"
+        network: "{{ foreman_network_netid }}"
+        mask: "{{ foreman_network_mask }}"
+        gateway: "{{ foreman_network_gateway | default(omit) }}"
+        from_ip: "{{ foreman_network_range_start | default(omit) }}"
+        to_ip: "{{ foreman_network_range_end | default(omit) }}"
+        boot_mode: "{{ foreman_network_boot_mode | default(omit) }}"
+        dns_primary: "{{ foreman_network_primary_dns | default(omit) }}"
+        dhcp_proxy: "{{ foreman_network_dhcp_name | default(omit) }}"
+        tftp_proxy: "{{ foreman_network_tftp_name | default(omit) }}"
+        vlanid: "{{ foreman_network_vlanid | default(omit) }}"
+        domains: "{{ foreman_network_domains | default(omit) }}"
+        state: present
+
+    - name: Setup OS  # noqa args[module]
       become: true
-      ansible.builtin.command: |
-        hammer subnet create \
-        --name {{ foreman_network_name }} \
-        --network {{ foreman_network_netid }} \
-        --mask {{ foreman_network_mask }} \
-      register: output
-      changed_when: output.rc == 0
-      failed_when: output.rc != 0 and "Name has already been taken" not in output.stderr
+      theforeman.foreman.operatingsystem:
+        name: "{{ foreman_os_name }}"
+        major: "{{ foreman_os_major | default(omit) }}"
+        minor: "{{ foreman_os_minor | default(omit) }}"
+        family: "{{ foreman_os_family | default(omit) }}"
+        release_name: "{{ foreman_os_release_name | default(omit) }}"
+        architectures: "{{ foreman_os_architectures | default(omit) }}"
+        media: "{{ foreman_os_media | default(omit) }}"
+        ptables: "{{ foreman_os_partition_tables | default(omit) }}"
+        provisioning_templates: "{{ foreman_os_provisioning_templates | default([]) | map(attribute='name') | list | flatten }}"
+        parameters: "{{ foreman_os_parameters | default(omit) }}"
+        state: present
       notify: Build PXE Default
 
-    - name: Show subnet info
+    - name: Set default templates for OS  # noqa args[module]
       become: true
-      ansible.builtin.command: |
-        hammer subnet info \
-          --name {{ foreman_network_name }}
-      changed_when: false
-      register: subnet_before
-
-    - name: Update subnet
-      become: true
-      ansible.builtin.command: |
-        hammer subnet update \
-        --name {{ foreman_network_name }} \
-        --network {{ foreman_network_netid }} \
-        --mask {{ foreman_network_mask }} \
-        --dns-primary {{ foreman_network_primary_dns }} \
-        --gateway {{ foreman_network_gateway }} \
-        --domains {{ foreman_network_domain }} \
-        --tftp {{ foreman_network_tftp_name }} \
-        --dhcp {{ foreman_network_dhcp_name }} \
-        --from {{ foreman_network_range_start }} \
-        --to {{ foreman_network_range_end }} \
-        --boot-mode {{ foreman_network_boot_mode }} \
-      register: output
-      changed_when: false
-
-    - name: Return whether subnet changed
-      ansible.builtin.command: |
-        hammer subnet info \
-          --name {{ foreman_network_name }}
-      register: subnet_after
-      changed_when: subnet_before.stdout != subnet_after.stdout
+      theforeman.foreman.os_default_template:
+        operatingsystem: "{{ foreman_os_name }} \
+          {% if foreman_os_major is defined %}{{ foreman_os_major }}{% endif %}\
+          {% if foreman_os_minor is defined %}.{{ foreman_os_minor }}{% endif %}"
+        provisioning_template: "{{ item.name }}"
+        template_kind: "{{ item.kind }}"
+        state: present
+      loop: "{{ foreman_os_provisioning_templates | default([]) }}"
       notify: Build PXE Default
 
-    - name: Setup OS
+    - name: Setup hostgroup  # noqa args[module]
       become: true
-      ansible.builtin.command: |
-        hammer os create \
-        --name {{ foreman_os_name }} \
-        --major {{ foreman_os_major }} \
-        --family {{ foreman_os_family }} \
-        --release-name {{ foreman_os_release_name }} \
-        --architectures {{ foreman_os_architectures }} \
-        --media "{{ foreman_os_media }}" \
-        --partition-tables "{{ foreman_os_partition_tables }}" \
-        --provisioning-templates "{{ foreman_os_provisioning_templates | join(',') }}" \
-      register: output
-      changed_when: output.rc == 0
-      failed_when: output.rc != 0 and "Title has already been taken" not in output.stderr
-      notify: Build PXE Default
-
-    - name: Create hostgroup
-      become: true
-      ansible.builtin.command: |
-        hammer hostgroup create \
-        --name {{ foreman_hostgroup_name }}
-      register: output
-      changed_when: output.rc == 0
-      failed_when: output.rc != 0 and "Name has already been taken" not in output.stderr
-      notify: Build PXE Default
-
-    - name: Show hostgroup info
-      become: true
-      ansible.builtin.command: |
-        hammer hostgroup info \
-          --name {{ foreman_hostgroup_name }}
-      changed_when: false
-      register: hostgroup_before
-
-    - name: Update hostgroup
-      become: true
-      ansible.builtin.command: |
-        hammer hostgroup update \
-        --name {{ foreman_hostgroup_name }} \
-        --domain {{ foreman_hostgroup_domain }} \
-        --subnet {{ foreman_hostgroup_subnet }} \
-        --architecture {{ foreman_hostgroup_architecture }} \
-        --operatingsystem "{{ foreman_hostgroup_operatingsystem }}" \
-        --medium "{{ foreman_hostgroup_medium }}" \
-        --partition-table "{{ foreman_hostgroup_partition_table }}" \
-        --pxe-loader "{{ foreman_hostgroup_pxe_loader }}" \
-        --root-password "{{ foreman_hostgroup_root_pass }}"
-      register: output
-      changed_when: false
-      notify: Build PXE Default
-
-    - name: Return whether hostgroup changed
-      ansible.builtin.command: |
-        hammer hostgroup info \
-          --name {{ foreman_hostgroup_name }}
-      register: hostgroup_after
-      changed_when: hostgroup_before.stdout != hostgroup_after.stdout
+      theforeman.foreman.hostgroup:
+        name: "{{ foreman_hostgroup_name }}"
+        domain: "{{ foreman_hostgroup_domain | default(omit) }}"
+        subnet: "{{ foreman_hostgroup_subnet | default(omit) }}"
+        architecture: "{{ foreman_hostgroup_architecture | default(omit) }}"
+        operatingsystem: "{{ foreman_hostgroup_operatingsystem | default(omit) }}"
+        medium: "{{ foreman_hostgroup_medium | default(omit) }}"
+        ptable: "{{ foreman_hostgroup_partition_table | default(omit) }}"
+        pxe_loader: "{{ foreman_hostgroup_pxe_loader | default(omit) }}"
+        root_pass: "{{ foreman_hostgroup_root_pass | default(omit) }}"
+        parameters: "{{ foreman_hostgroup_parameters | default(omit) }}"
+        environment: "{{ foreman_hostgroup_environment | default(omit) }}"
       notify: Build PXE Default
 
     - name: Force download discovery image

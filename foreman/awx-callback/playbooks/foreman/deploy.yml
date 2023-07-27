@@ -20,8 +20,4 @@
   tags: foreman, configure, always
   ansible.builtin.import_playbook: 03-configure.yml
 
-- name: Configure provisioning
-  tags: foreman, provisioning, always
-  ansible.builtin.import_playbook: 04-provisioning.yml
-
 ...

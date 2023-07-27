@@ -1,11 +1,22 @@
 ---
+foreman_initial_location: "Testing"
+foreman_initial_organization: "Testing"
+foreman_initial_admin_username: "admin"
+foreman_initial_admin_password: "admin"
+
+foreman_server_url: "https://127.0.0.1"
+foreman_username: "{{ foreman_initial_admin_username }}"
+foreman_password: "{{ foreman_initial_admin_password }}"
+foreman_validate_certs: false
+
 foreman_network_name: "PXE"
 foreman_network_boot_mode: "DHCP"
 
 foreman_network_netid: "{{ foreman_network | ansible.utils.ipaddr('network') }}"
 foreman_network_mask: "{{ foreman_network | ansible.utils.ipaddr('netmask') }}"
 foreman_network_primary_dns: "{{ dhcp_option_domain_name_servers | split(' ') | first }}"
-foreman_network_domain: "{{ dhcp_option_domain_name }}"
+foreman_network_domains:
+  - "{{ dhcp_option_domain_name }}"
 foreman_network_gateway: "{{ dhcp_option_routers | split(' ') | first }}"
 
 foreman_network_dhcp_name: "{{ ansible_fqdn }}"
@@ -20,11 +31,16 @@ foreman_os_major: "20.04"
 foreman_os_family: "Debian"
 foreman_os_architectures: "x86_64"
 foreman_os_media: "Ubuntu mirror"
-foreman_os_partition_tables: "Preseed default"
+foreman_os_partition_tables:
+  - "Preseed default"
+
 foreman_os_provisioning_templates:
-  - "Preseed default PXELinux"  # Boot disk from PXE
-  - "Preseed default"  # Provisioning debconf preconfiguration
-  - "Preseed default finish"  # Post-install setup, e.g. root password
+  - name: "Preseed default PXELinux"  # Boot disk from PXE
+    kind: "PXELinux"
+  - name: "Preseed default"  # Provisioning debconf preconfiguration
+    kind: "provision"
+  - name: "Preseed default finish"  # Post-install setup, e.g. root password
+    kind: "finish"
 
 foreman_hostgroup_name: "pxe_booted"
 foreman_hostgroup_domain: "{{ foreman_network_domain }}"
@@ -32,7 +48,7 @@ foreman_hostgroup_subnet: "{{ foreman_network_name }}"
 foreman_hostgroup_architecture: "x86_64"
 foreman_hostgroup_operatingsystem: "{{ foreman_os_name }} {{ foreman_os_major }}"
 foreman_hostgroup_medium: "{{ foreman_os_media }}"
-foreman_hostgroup_partition_table: "{{ foreman_os_partition_tables }}"
+foreman_hostgroup_partition_table: "{{ foreman_os_partition_tables | first }}"
 foreman_hostgroup_pxe_loader: "PXELinux BIOS"
 foreman_hostgroup_root_pass: "rootroot"
 

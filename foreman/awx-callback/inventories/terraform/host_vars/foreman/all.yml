@@ -1,8 +1,4 @@
 ---
-foreman_initial_location: "Testing"
-foreman_initial_organization: "Testing"
-foreman_initial_admin_username: "admin"
-foreman_initial_admin_password: "admin"
 
 foreman_network: "192.168.21.0/24"
 
