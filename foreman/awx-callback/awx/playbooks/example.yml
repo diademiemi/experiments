@@ -20,6 +20,7 @@
         mode: "0644"
 
     - name: Install apt package
+      become: true
       ansible.builtin.apt:
         name: lolcat
         state: present
