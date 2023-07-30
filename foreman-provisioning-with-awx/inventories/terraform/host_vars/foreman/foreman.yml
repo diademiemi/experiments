@@ -14,31 +14,6 @@ foreman_validate_certs: false
 
 foreman_domain_name: "{{ dns_domain }}"
 
-foreman_network_name: "PXE"
-foreman_network_boot_mode: "DHCP"
-foreman_network_netid: "{{ foreman_network | ansible.utils.ipaddr('network') }}"
-foreman_network_mask: "{{ foreman_network | ansible.utils.ipaddr('netmask') }}"
-foreman_network_primary_dns: "{{ dhcp_option_domain_name_servers | split(' ') | first }}"
-foreman_network_domains:
-  - "{{ dhcp_option_domain_name }}"
-foreman_network_gateway: "{{ dhcp_option_routers | split(' ') | first }}"
-foreman_network_dhcp_name: "{{ ansible_fqdn }}"
-foreman_network_tftp_name: "{{ ansible_fqdn }}"
-foreman_network_dns_name: "{{ ansible_fqdn }}"
-
-foreman_network_range_start: "{{ dhcp_range | split(' ') | first }}"
-foreman_network_range_end: "{{ dhcp_range | split(' ') | last }}"
-
-foreman_os_release_name: "focal"
-foreman_os_name: "Ubuntu"
-foreman_os_major: "20.04"
-foreman_os_family: "Debian"
-foreman_os_architectures: "x86_64"
-foreman_os_media: "Ubuntu mirror"
-foreman_os_password_hash: "SHA512"
-foreman_os_partition_tables:
-  - "Preseed default"
-
 foreman_os_provisioning_templates:
   - name: "Preseed default PXELinux"  # Boot disk from PXE
     kind: "PXELinux"
@@ -46,14 +21,12 @@ foreman_os_provisioning_templates:
     kind: "provision"
   - name: "Preseed default finish"  # Post-install setup, e.g. root password
     kind: "finish"
-  - name: "Linux host_init_config default" # Host configuration
-    kind: "host_init_config"
   - name: "Preseed Autoinstall cloud-init user data"  # Create users
     kind: "user_data"
   - name: "Global Registration"
     kind: "registration"
 
-foreman_hostgroup_name: "pxe_booted"
+# foreman_hostgroup_name: "pxe_booted"
 foreman_hostgroup_domain: "{{ foreman_network_domains[0] }}"
 foreman_hostgroup_subnet: "{{ foreman_network_name }}"
 foreman_hostgroup_architecture: "x86_64"
@@ -62,7 +35,7 @@ foreman_hostgroup_medium: "{{ foreman_os_media }}"
 foreman_hostgroup_partition_table: "{{ foreman_os_partition_tables | first }}"
 foreman_hostgroup_pxe_loader: "PXELinux BIOS"
 foreman_hostgroup_root_pass: "rootroot"
-foreman_hostgroup_parameters:
+_foreman_hostgroup_parameters:
   - name: "skip-puppet-setup"
     value: true
     parameter_type: "boolean"
@@ -78,14 +51,17 @@ foreman_hostgroup_parameters:
   - name: "username_to_create"
     value: "{{ system_user }}"
     parameter_type: "string"
+  - name: "realname_to_create"
+    value: "{{ system_user }}"
+    parameter_type: "string"
   - name: "password_to_create"
     value: "{{ system_password }}"
     parameter_type: "string"
   - name: "host_packages"
-    value: curl
+    value: "curl ca-certificates"
     parameter_type: "string"
 
-foreman_hostgroup_parameters_ansible_job_id: "{{ foreman_hostgroup_parameters +
+foreman_hostgroup_parameters: "{{ _foreman_hostgroup_parameters +
   [{'name': 'ansible_job_id', 'value': ansible_job_id, 'parameter_type': 'integer'}] }}"
 ansible_job_id: "{{ lookup('awx.awx.controller_api',
       'job_templates',

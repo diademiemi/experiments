@@ -40,7 +40,7 @@ awx_inventory_source_credential: "{{ awx_foreman_credential_name }}"
 awx_inventory_source_update_on_launch: true
 awx_inventory_source_source_vars:
   validate_certs: false
-  host_filters: 'hostgroup="{{ foreman_bare_metal_hostgroup_name }}"'
+  host_filters: 'hostgroup="{{ foreman_hostgroup_name }}"'
 
 awx_job_template_name: "{{ job_template_name }}"
 awx_job_template_organization: "{{ awx_organization_name }}"
