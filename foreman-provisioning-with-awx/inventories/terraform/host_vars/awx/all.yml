@@ -1,7 +1,7 @@
 ---
-rancher_rke2_channel: "v1.25"
-rancher_rke2_type: "server"
-rancher_rke2_tls_san:
+rke2_channel: "v1.25"
+rke2_type: "server"
+rke2_tls_san:
   - "terraform.test"
 
 kubeconfig_path: /etc/rancher/rke2/rke2.yaml
