@@ -7,7 +7,7 @@ collections:
   - name: awx.awx
 
 roles:
-  - name: diademiemi.k3s
+  - name: diademiemi.rke2
   - name: diademiemi.helm
 
 ...

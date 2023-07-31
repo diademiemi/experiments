@@ -68,6 +68,7 @@
         inputs:
           username: "{{ awx_machine_credential_username }}"
           password: "{{ awx_machine_credential_password }}"
+          become_password: "{{ awx_machine_credential_password }}"
         organization: "{{ awx_machine_credential_organization }}"
         state: present
 

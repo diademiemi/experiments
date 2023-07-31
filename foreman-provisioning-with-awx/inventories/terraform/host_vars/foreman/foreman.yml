@@ -14,6 +14,38 @@ foreman_validate_certs: false
 
 foreman_domain_name: "{{ dns_domain }}"
 
+
+foreman_custom_post_template_name: "Preseed default finish custom post"
+foreman_custom_post_template: |
+  apt-get update
+
+  <% if !host_param('host_packages').blank? -%>
+    echo "Installing prerequisites"
+
+    apt-get install -y <%= host_param('host_packages') %>
+  <% end -%>
+
+  <% if !host_param('create_user_name').blank? -%>
+    echo "Creating user"
+
+    <% if !host_param('create_user_home').blank? -%>
+      useradd --create-home --home-dir <%= host_param('create_user_home') %> <%= host_param('create_user_name') %>
+    <% else -%>
+      useradd --create-home <%= host_param('create_user_name') %>
+    <% end -%>
+
+    <% if !host_param('create_user_password').blank? -%>
+      echo '<%= host_param('create_user_name') %>:<%= host_param('create_user_password') %>' | /usr/sbin/chpasswd
+    <% elsif !host_param('create_user_hash').blank? -%>
+      echo '<%= host_param('create_user_name') %>:<%= host_param('create_user_password') %>' | /usr/sbin/chpasswd -e
+    <% end -%>
+
+    <% if host_param_true?('create_user_sudo') -%>
+      usermod -aG sudo <%= host_param('create_user_name') %>
+    <% end -%>
+
+  <% end -%>
+
 foreman_os_provisioning_templates:
   - name: "Preseed default PXELinux"  # Boot disk from PXE
     kind: "PXELinux"
@@ -48,25 +80,29 @@ _foreman_hostgroup_parameters:
   - name: "ansible_host_config_key"
     value: "secret"
     parameter_type: "string"
-  - name: "username_to_create"
+  - name: "create_user_name"
     value: "{{ system_user }}"
     parameter_type: "string"
-  - name: "realname_to_create"
-    value: "{{ system_user }}"
-    parameter_type: "string"
-  - name: "password_to_create"
+  - name: "create_user_password"
     value: "{{ system_password }}"
     parameter_type: "string"
+  - name: "create_user_home"
+    value: "/home/{{ system_user }}"
+    parameter_type: "string"
+  - name: "create_user_sudo"
+    value: "true"
+    parameter_type: "boolean"
   - name: "host_packages"
     value: "curl ca-certificates"
     parameter_type: "string"
 
-foreman_hostgroup_parameters: "{{ _foreman_hostgroup_parameters +
-  [{'name': 'ansible_job_id', 'value': ansible_job_id, 'parameter_type': 'integer'}] }}"
-ansible_job_id: "{{ lookup('awx.awx.controller_api',
+_ansible_job_template_id: "{{ lookup('awx.awx.controller_api',
       'job_templates',
       query_params={'name': foreman_awx_job_template_name},
       host=foreman_awx_host, username=foreman_awx_username, password=foreman_awx_password, verify_ssl=False).id | int }}"
+
+foreman_hostgroup_parameters: "{{ _foreman_hostgroup_parameters +
+  [{'name': 'ansible_job_template_id', 'value': _ansible_job_template_id, 'parameter_type': 'integer'}] }}"
 
 foreman_discovery_image_url: "http://downloads.theforeman.org/discovery/releases/3.5/fdi-image-latest.tar"
 

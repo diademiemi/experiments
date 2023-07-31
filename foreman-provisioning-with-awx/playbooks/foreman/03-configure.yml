@@ -48,6 +48,13 @@
         state: present
       notify: Build PXE Default
 
+    - name: Create custom post provisioning template  # noqa args[module]
+      theforeman.foreman.provisioning_template:
+        name: "{{ foreman_custom_post_template_name }}"
+        template: "{{ foreman_custom_post_template }}"
+        kind: snippet
+        state: present
+
     - name: Set default templates for OS  # noqa args[module]
       theforeman.foreman.os_default_template:
         operatingsystem: "{{ foreman_os_name }} \

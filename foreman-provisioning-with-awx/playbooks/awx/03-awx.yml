@@ -78,7 +78,7 @@
             hostname: "{{ awx_hostname | default(omit) }}"
             image: "{{ awx_image | default(omit) }}"
             image_version: "{{ awx_image_version | default(omit) }}"
-            image_pull_policy: "{{ awx_image_pull_policy | default(omit) }}"
+            image_pull_policy: "{{ awx_image_pull_policy | default('Always') }}"
             ee_images: "{{ awx_ee_images | default(omit) }}"
             redis_image: "{{ awx_redis_image | default(omit) }}"
             redis_image_version: "{{ awx_redis_image_version | default(omit) }}"
@@ -89,6 +89,8 @@
             ingress_class_name: "{{ awx_ingress_class_name | default(omit) }}"
             ingress_path: "{{ awx_ingress_path | default(omit) }}"
             ingress_annotations: "{{ awx_ingress_annotations | default(omit) }}"  # String
+            extra_settings: "{{ awx_extra_settings | default(omit) }}"
+            no_log: false
 
     - name: "Return AWX password"
       ansible.builtin.debug:

@@ -1,8 +1,9 @@
 ---
-k3s_version: "v1.26.6+k3s1"
-k3s_first_master: "awx"
-k3s_role: "master"
+rancher_rke2_channel: "v1.25"
+rancher_rke2_type: "server"
+rancher_rke2_tls_san:
+  - "terraform.test"
 
-kubeconfig_path: /etc/rancher/k3s/k3s.yaml
+kubeconfig_path: /etc/rancher/rke2/rke2.yaml
 
 ...

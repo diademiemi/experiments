@@ -9,9 +9,9 @@
         update_cache: true
       changed_when: false
 
-- name: Install K3S
-  tags: k3s, always
-  ansible.builtin.import_playbook: 01-k3s.yml
+- name: Install RKE2
+  tags: rke2, always
+  ansible.builtin.import_playbook: 01-rke2.yml
 
 - name: Install Kubernetes requisites
   tags: requisites, always

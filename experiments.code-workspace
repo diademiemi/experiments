@@ -26,7 +26,9 @@
 				"file:///mnt/files/Projects/Code_Dumps/experiments/foreman/awx-callback/playbooks/awx/deploy.yml",
 				"file:///mnt/files/Projects/Code_Dumps/experiments/foreman/awx-callback/playbooks/foreman/deploy.yml",
 				"file:///mnt/files/Projects/Code_Dumps/experiments/foreman/awx-callback/playbooks/foreman/03-configure.yml",
-				"file:///mnt/files/Projects/Code_Dumps/experiments/foreman/awx-callback/playbooks/combined/deploy.yml"
+				"file:///mnt/files/Projects/Code_Dumps/experiments/foreman/awx-callback/playbooks/combined/deploy.yml",
+				"file:///mnt/files/Projects/Code_Dumps/experiments/foreman-provisioning-with-awx/playbooks/foreman/deploy.yml",
+				"file:///mnt/files/Projects/Code_Dumps/experiments/foreman-provisioning-with-awx/playbooks/combined/deploy.yml"
 			]
 		}
 	},

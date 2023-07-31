@@ -16,6 +16,49 @@
         state: present
 
   tasks:
+    - name: Add Nginx Helm config
+      kubernetes.core.k8s:
+        kubeconfig: "{{ kubeconfig_path | default(omit) }}"
+        definition:
+          apiVersion: helm.cattle.io/v1
+          kind: HelmChartConfig
+          metadata:
+            name: rke2-ingress-nginx
+            namespace: kube-system
+          spec:
+            valuesContent: |-
+              controller:
+                config:
+                  use-forwarded-headers: "true"
+
+    # - name: Add nginx ingress Helm repository
+    #   kubernetes.core.helm_repository:
+    #     name: ingress-nginx
+    #     repo_url: "https://kubernetes.github.io/ingress-nginx"
+
+    # - name: "Install nginx ingress"
+    #   kubernetes.core.helm:
+    #     kubeconfig: "{{ kubeconfig_path }}"
+    #     chart_ref: "ingress-nginx/ingress-nginx"
+    #     chart_version: "{{ nginx_ingress_version | default(omit) }}"
+    #     release_name: "{{ nginx_ingress_release_name | default('ingress-nginx') }}"
+    #     namespace: "kube-system"
+    #     create_namespace: true
+    #     values:
+    #       controller:
+    #         kind: DaemonSet
+    #         hostNetwork: true
+    #         hostPort:
+    #           enabled: true
+    #         service:
+    #           enabled: true
+    #           type: LoadBalancer
+    #           externalTrafficPolicy: Local
+    #         publishService:
+    #           enabled: false
+    #         config:
+    #           use-forwarded-headers: "true"
+
     - name: Add Longhorn Helm repository
       kubernetes.core.helm_repository:
         name: longhorn

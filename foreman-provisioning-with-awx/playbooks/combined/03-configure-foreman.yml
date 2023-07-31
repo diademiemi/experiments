@@ -8,7 +8,7 @@
       password: "{{ foreman_server_password }}"
       validate_certs: "{{ foreman_validate_certs }}"
   tasks:
-    - name: Setup hostgroup  # noqa args[module]
+    - name: Setup PXE hostgroup  # noqa args[module]
       theforeman.foreman.hostgroup:
         name: "{{ foreman_hostgroup_name }}"
         domain: "{{ foreman_hostgroup_domain | default(omit) }}"

@@ -2,6 +2,15 @@
 awx_hostname: "awx.terraform.test"
 awx_admin_password: "admin"
 
+awx_ingress_class_name: nginx
+# awx_ingress_annotations: |
+#   nginx.ingress.kubernetes.io/configuration-snippet: |
+#       more_set_headers "X-Forwarded-For $http_x_forwarded_for";
+
+awx_extra_settings:
+  - setting: REMOTE_HOST_HEADERS
+    value: "['HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR', 'REMOTE_HOST']"
+
 awx_dns_server: "{{ dns_server }}"
 
 controller_host: "{{ awx_hostname }}"
@@ -46,7 +55,7 @@ awx_job_template_name: "{{ job_template_name }}"
 awx_job_template_organization: "{{ awx_organization_name }}"
 awx_job_template_description: "Job template to test running Ansible on a host that has been provisioned by Foreman"
 awx_job_template_project: "{{ awx_project_name }}"
-awx_job_template_playbook: "foreman/awx-callback/awx/playbooks/example.yml"
+awx_job_template_playbook: "foreman-provisioning-with-awx/awx/playbooks/example.yml"
 awx_job_template_inventory: "Foreman"
 awx_job_template_credential: "{{ awx_machine_credential_name }}"
 awx_job_template_job_type: "run"
