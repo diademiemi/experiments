@@ -8,6 +8,21 @@
       validate_certs: "{{ foreman_validate_certs }}"
 
   tasks:
+    - name: Create bare metal hostgroup  # noqa args[module]
+      theforeman.foreman.hostgroup:
+        name: "{{ foreman_bare_metal_hostgroup_name }}"
+        domain: "{{ foreman_bare_metal_hostgroup_domain | default(omit) }}"
+        subnet: "{{ foreman_bare_metal_hostgroup_subnet | default(omit) }}"
+        architecture: "{{ foreman_bare_metal_hostgroup_architecture | default(omit) }}"
+        operatingsystem: "{{ foreman_bare_metal_hostgroup_operatingsystem | default(omit) }}"
+        medium: "{{ foreman_bare_metal_hostgroup_medium | default(omit) }}"
+        ptable: "{{ foreman_bare_metal_hostgroup_partition_table | default(omit) }}"
+        pxe_loader: "{{ foreman_bare_metal_hostgroup_pxe_loader | default(omit) }}"
+        root_pass: "{{ foreman_bare_metal_hostgroup_root_pass | default(omit) }}"
+        parameters: "{{ foreman_bare_metal_hostgroup_parameters | default(omit) }}"
+        environment: "{{ foreman_bare_metal_hostgroup_environment | default(omit) }}"
+        state: present
+
     - name: Check if host is already registered  # noqa args[module]
       theforeman.foreman.host_info:
         name: "{{ ansible_fqdn }}"
@@ -16,19 +31,25 @@
     - name: Register host
       when: foreman_host_info.host.id is not defined
       block:
-        - name: Create bare metal hostgroup  # noqa args[module]
-          theforeman.foreman.hostgroup:
-            name: "{{ foreman_bare_metal_hostgroup_name }}"
+        - name: Update host entry  # noqa args[module]
+          theforeman.foreman.host:
+            name: "{{ ansible_fqdn }}"
+            location: "{{ foreman_location_name }}"
+            organization: "{{ foreman_organization_name }}"
+            hostgroup: "{{ foreman_bare_metal_hostgroup_name }}"
+            architecture: "{{ foreman_os_architectures }}"
+            operatingsystem: "{{ foreman_os_name }} \
+              {% if foreman_os_major is defined %}{{ foreman_os_major }}{% endif %}\
+              {% if foreman_os_minor is defined %}.{{ foreman_os_minor }}{% endif %}"
             domain: "{{ foreman_bare_metal_hostgroup_domain | default(omit) }}"
-            subnet: "{{ foreman_bare_metal_hostgroup_subnet | default(omit) }}"
-            architecture: "{{ foreman_bare_metal_hostgroup_architecture | default(omit) }}"
-            operatingsystem: "{{ foreman_bare_metal_hostgroup_operatingsystem | default(omit) }}"
-            medium: "{{ foreman_bare_metal_hostgroup_medium | default(omit) }}"
-            ptable: "{{ foreman_bare_metal_hostgroup_partition_table | default(omit) }}"
-            pxe_loader: "{{ foreman_bare_metal_hostgroup_pxe_loader | default(omit) }}"
-            root_pass: "{{ foreman_bare_metal_hostgroup_root_pass | default(omit) }}"
-            parameters: "{{ foreman_bare_metal_hostgroup_parameters | default(omit) }}"
-            environment: "{{ foreman_bare_metal_hostgroup_environment | default(omit) }}"
+            interfaces_attributes:
+              - type: "interface"
+                primary: true
+                domain: "{{ foreman_bare_metal_hostgroup_domain | default(omit) }}"
+                identifier: "{{ ansible_default_ipv4.interface }}"
+                ip: "{{ ansible_default_ipv4.address }}"
+                mac: "{{ ansible_default_ipv4.macaddress }}"
+                managed: true
             state: present
 
         - name: Get bare metal hostgroup ID  # noqa args[module]
@@ -82,27 +103,5 @@
             {{ foreman_registration_command.json.registration_command }}
           args:
             creates: /etc/foreman
-
-        - name: Update host entry  # noqa args[module]
-          theforeman.foreman.host:
-            name: "{{ ansible_fqdn }}"
-            location: "{{ foreman_location_name }}"
-            organization: "{{ foreman_organization_name }}"
-            hostgroup: "{{ foreman_bare_metal_hostgroup_name }}"
-            architecture: "{{ foreman_os_architectures }}"
-            operatingsystem: "{{ foreman_os_name }} \
-              {% if foreman_os_major is defined %}{{ foreman_os_major }}{% endif %}\
-              {% if foreman_os_minor is defined %}.{{ foreman_os_minor }}{% endif %}"
-            domain: "{{ foreman_bare_metal_hostgroup_domain | default(omit) }}"
-            interfaces_attributes:
-              - type: "interface"
-                primary: true
-                domain: "{{ foreman_bare_metal_hostgroup_domain | default(omit) }}"
-                identifier: "{{ ansible_default_ipv4.interface }}"
-                ip: "{{ ansible_default_ipv4.address }}"
-                mac: "{{ ansible_default_ipv4.macaddress }}"
-                managed: true
-            state: present
-
 
 ...
