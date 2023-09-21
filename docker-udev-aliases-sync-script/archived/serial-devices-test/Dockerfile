@@ -2,10 +2,9 @@ FROM rust:1-buster as builder
 
 WORKDIR /usr/src/serial-devices-test
 
-RUN apt-get update && apt-get install --no-install-recommends -y \
-    libudev-dev
+RUN apt update && apt install -y libudev-dev
 
-COPY . .
+COPY ../../serial-devices-test .
 
 RUN cargo build --release
 
@@ -16,9 +15,5 @@ COPY --from=builder /usr/src/serial-devices-test/target/release/serial-devices-t
 WORKDIR /config
 
 VOLUME /config
-
-COPY entrypoint.sh /entrypoint.sh
-
-ENTRYPOINT ["/entrypoint.sh"]
 
 CMD ["/usr/local/bin/serial-devices-test"]

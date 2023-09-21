@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  serial:
+    build:
+      context: ./serial-devices-test
+      dockerfile: Dockerfile
+    image: localhost/experiments/serial-devices-test:latest
+    container_name: serial-devices-test
+    restart: unless-stopped
+    devices:
+      - /dev/bus/usb
+    privileged: true
+    volumes:
+      - .../../serial-devices-test/config.yaml:/config/config.yaml
+    depends_on:
+      - host
+    command: ["/bin/bash", "-c", "while true; do sleep 1; done"]
+
+  host:  # For an initial command only
+    build:
+      context: ./alias-sync
+      dockerfile: Dockerfile
+    image: localhost/experiments/alias-sync:latest
+    container_name: alias-sync
+    restart: unless-stopped
+    privileged: true
+    network_mode: host
+    pid: host
+    ipc: host
+    volumes:
+      - /:/host

@@ -1,2 +1,6 @@
 {% for device in devices %}
-ACTION=="add", KERNELS=="{{ device.kernel_address }}", SYMLINK+="{{ device.symlink }}"
+# Map {{ device.kernel_address }} to /dev/{{ device.symlink }}
+ACTION=="add|change", SUBSYSTEM=="tty", SUBSYSTEMS=="usb", KERNELS=="{{ device.kernel_address }}", RUN+="/usr/local/bin/docker-static-usb-nodes.sh add /dev/{{ device.symlink }} %M %m"
+ACTION=="remove", SUBSYSTEM=="tty", SUBSYSTEMS=="usb", KERNELS=="{{ device.kernel_address }}", RUN+="/usr/local/bin/docker-static-usb-nodes.sh remove /dev/{{ device.symlink }} %M %m"
+
+{% endfor %}

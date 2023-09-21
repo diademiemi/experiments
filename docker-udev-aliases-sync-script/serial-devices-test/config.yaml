@@ -1,5 +1,5 @@
 ---
-serial_devices:
+serial_devices:  # Test devices
   - dev: /dev/usb1
     baud_rate: 115200
   - dev: /dev/usb2

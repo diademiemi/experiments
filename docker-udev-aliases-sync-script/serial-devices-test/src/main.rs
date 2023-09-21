@@ -45,7 +45,12 @@ fn tail_serial_devices(config: Config) {
                         std::thread::sleep(std::time::Duration::from_millis(1000));
                         continue
                     },
-                    _ => panic!("Failed to open serial port {0}", device.dev),
+                    // _ => panic!("Failed to open serial port {0}", device.dev),
+                    _ => {
+                        println!("Failed to open serial port. Retrying in 1 second.");
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        continue
+                    }
                 };
         }
 
