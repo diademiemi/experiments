@@ -2,7 +2,7 @@
 collections:
   - name: cloud.terraform
     type: git
-    source: https://github.com/diademiemi/cloud.terraform.git  # https://github.com/ansible-collections/cloud.terraform/pull/55
+    source: https://github.com/ansible-community/cloud.terraform.git
   - name: theforeman.foreman
   - name: awx.awx
 
