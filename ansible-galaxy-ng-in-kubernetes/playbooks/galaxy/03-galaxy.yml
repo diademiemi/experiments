@@ -83,9 +83,9 @@
 
             deployment_type: galaxy
             image: quay.io/pulp/galaxy
-            image_version: nightly 
+            image_version: 4.8.0
             image_web: quay.io/pulp/galaxy-web
-            image_web_version: nightly
+            image_web_version: 4.8.0
             no_log: false
 
             deploy_ee_defaults: true
