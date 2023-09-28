@@ -1,0 +1,2 @@
+# Ansible Galaxy-NG in Kubernetes
+This is a simple example of how to run Ansible Galaxy-NG in Kubernetes. This wasn't very well documented, so I wanted to try it out here. The best "documentation" available for this is the [Pulp Operator GitHub Page](https://github.com/pulp/pulp-operator) in the [`.github/workflows`](https://github.com/pulp/pulp-operator/tree/main/.github/workflows) and [`config/samples`](https://github.com/pulp/pulp-operator/tree/main/config/samples) directories.

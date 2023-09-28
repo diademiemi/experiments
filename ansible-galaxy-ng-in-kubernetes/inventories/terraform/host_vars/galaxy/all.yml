@@ -1,0 +1,10 @@
+---
+rke2_channel: "v1.26"
+rke2_type: "server"
+rke2_tls_san:
+  - "terraform.test"
+
+kubeconfig_path: /etc/rancher/rke2/rke2.yaml
+
+pulp_admin_password: "admin"
+...

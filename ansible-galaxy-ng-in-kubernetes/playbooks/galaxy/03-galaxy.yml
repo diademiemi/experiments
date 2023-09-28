@@ -1,0 +1,165 @@
+---
+- name: Set up Galaxy
+  hosts: galaxy
+  gather_facts: true
+  pre_tasks:
+    - name: Ensure Python pip is installed
+      ansible.builtin.package:
+        name: python3-pip
+        state: present
+
+    - name: Ensure kubernetes python module is installed
+      ansible.builtin.pip:
+        name: kubernetes
+        state: present
+
+  tasks:
+    - name: "Generate random admin password"
+      ansible.builtin.set_fact:
+        pulp_admin_password: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
+      when: pulp_admin_password is not defined
+
+    - name: Add Pulp Helm repository
+      kubernetes.core.helm_repository:
+        name: pulp-operator
+        repo_url: "https://github.com/pulp/pulp-k8s-resources/raw/main/helm-charts/"
+
+    - name: "Install Pulp Operator"
+      kubernetes.core.helm:
+        kubeconfig: "{{ kubeconfig_path | default(omit) }}"
+        chart_ref: "pulp-operator/pulp-operator"
+        chart_version: "{{ pulp_version | default(omit) }}"
+        release_name: "{{ pulp_operator_release_name | default('pulp-operator') }}"
+        namespace: "{{ pulp_namespace | default('pulp') }}"
+        create_namespace: true
+
+    - name: "Generate SSL certificate"
+      kubernetes.core.k8s:
+        kubeconfig: "{{ kubeconfig_path | default(omit) }}"
+        definition:
+          apiVersion: cert-manager.io/v1
+          kind: Certificate
+          metadata:
+            name: "{{ pulp_name | default('pulp-deployment') }}-certificate"
+            namespace: "{{ pulp_namespace | default('pulp') }}"
+          spec:
+            secretName: "{{ pulp_name | default('pulp-deployment') }}-certificate"
+            commonName: "{{ pulp_hostname | default('galaxy.terraform.test') }}"
+            dnsNames:
+              - "{{ pulp_hostname | default('galaxy.terraform.test') }}"
+            issuerRef:
+              name: selfsigned-ca-issuer
+              kind: ClusterIssuer
+              group: cert-manager.io
+      when: pulp_ssl | default(true)
+
+    - name: "Create pulp password secret"
+      kubernetes.core.k8s:
+        kubeconfig: "{{ kubeconfig_path | default(omit) }}"
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: "{{ pulp_name | default('pulp-deployment') }}-admin-password"
+            namespace: "{{ pulp_namespace | default('pulp') }}"
+          stringData:
+            password: "{{ pulp_admin_password }}"
+
+    - name: "Deploy pulp"
+      kubernetes.core.k8s:
+        kubeconfig: "{{ kubeconfig_path | default(omit) }}"
+        definition:
+          apiVersion: repo-manager.pulpproject.org/v1beta2
+          kind: Pulp
+          metadata:
+            name: "{{ pulp_name | default('pulp-deployment') }}"
+            namespace: "{{ pulp_namespace | default('pulp') }}"
+          spec:
+            ingress_type: ingress
+            ingress_class_name: nginx
+            is_nginx_ingress: false  # This creates configuration snippets which aren't allowed by default
+            ingress_host: galaxy.terraform.test
+            ingress_tls_secret: "{{ pulp_name | default('pulp-deployment') }}-certificate"
+
+            deployment_type: galaxy
+            image: quay.io/pulp/galaxy
+            image_version: nightly 
+            image_web: quay.io/pulp/galaxy-web
+            image_web_version: nightly
+            no_log: false
+
+            deploy_ee_defaults: true
+
+            admin_password_secret: "{{ pulp_name | default('pulp-deployment') }}-admin-password"
+            # signing_secret: "signing-galaxy"
+            # signing_scripts_configmap: "signing-scripts"
+            # nodeport_port: 30000
+
+            # k3s local-path requires this
+            file_storage_access_mode: "ReadWriteMany"
+            # We have a little over 10GB free on GHA VMs/instances
+            file_storage_size: "10Gi"
+            file_storage_storage_class: longhorn
+            pulp_settings:
+              token_server: http://galaxy.terraform.test:30000/token/
+              content_origin: http://galaxy.terraform.test:30000
+              ansible_api_hostname: http://galaxy.terraform.test:30000
+              api_root: "/api/galaxy/pulp/"
+              allowed_export_paths:
+                - /tmp
+              allowed_import_paths:
+                - /tmp
+              analytics: false
+              ## We need to define ai_deny_index on the new version, it needs to be set but there doesn't seem to be a default
+              'galaxy_feature_flags__ai_deny_index': 'false'  # Just setting this seems to work?
+              ## This seems broken (Indent error)
+              # galaxy_feature_flags: '{"execution_environments": true, "legacy_roles": true, "ai_deny_index": false, "dynaconf_merge": true}'
+              ## This also seems broken  (Indent error)
+              # galaxy_feature_flags:
+                # execution_environments: "True"
+                # legacy_roles: "True"
+                # ai_deny_index: "False"
+                # dynaconf_merge: "True"
+              ## This also seems broken (Key error)
+              # 'galaxy_feature_flags__execution_environments': 'true'
+              'galaxy_feature_flags__legacy_roles': 'true'
+              # 'galaxy_feature_flags__dynaconf_merge': 'true'
+              # 'galaxy_feature_flags': { 'execution_environments': 'true', 'dynaconf_merge': 'true', 'legacy_roles': 'true', 'ai_deny_index': 'false' }
+            database:
+              postgres_storage_class: longhorn
+
+            api:
+              replicas: 1
+            content:
+              replicas: 1
+              resource_requirements:
+                requests:
+                  cpu: 150m
+                  memory: 256Mi
+                limits:
+                  cpu: 800m
+                  memory: 1Gi
+            worker:
+              replicas: 1
+              resource_requirements:
+                requests:
+                  cpu: 150m
+                  memory: 256Mi
+                limits:
+                  cpu: 800m
+                  memory: 1Gi
+            web:
+              replicas: 1
+              resource_requirements:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: 800m
+                  memory: 1Gi
+
+    - name: "Return pulp password"
+      ansible.builtin.debug:
+        msg: "pulp has been deployed. The pulp admin password is: `{{ pulp_admin_password }}`"
+
+...
