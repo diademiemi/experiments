@@ -1,6 +1,6 @@
 module "vm" {
   source     = "diademiemi/vm/libvirt"
-  version    = "4.7.0"
+  version    = "4.7.1"
   depends_on = [
     libvirt_network.network,
     null_resource.build-vyos-qcow2
