@@ -1,0 +1,15 @@
+---
+ipaadmin_password: "AdminAdmin123!"
+ipadm_password: "{{ ipaadmin_password }}"
+
+ipa_domain: "{{ ansible_domain }}"
+ipaserver_domain: "{{ ipa_domain }}"
+ipaserver_realm: "{{ ipa_domain | upper }}"
+ipaserver_hostname: "{{ ansible_fqdn }}"
+
+ipaserver_setup_dns: true
+ipaserver_auto_forwarders: true
+ipaserver_ip_addresses: "{{ ansible_all_ipv4_addresses }}"
+
+ipaserver_allow_zone_overlap: true
+...

@@ -1,0 +1,23 @@
+- name: Start VMs & Add to /etc/hosts
+  tags: always, vms
+  ansible.builtin.import_playbook: diademiemi.vm_utils.terraform_inv_mgt
+
+- name: Build VyOS image
+  hosts: localhost
+  tags: always, vyos, vms
+  tasks:
+    - name: Build VyOS image
+      ansible.builtin.include_role: 
+        name: diademiemi.vm_utils.vyos_qcow2_image
+      when:
+        - _vyos_build_image
+      vars:
+        _vyos_build_image: "{{ vyos_build_image | default('{% if _vm_utils_terraform_provider == \"libvirt\" %}true{% else %}false{% endif %}') | bool }}"
+
+- name: Start VMs & Add to /etc/hosts
+  tags: always, vms
+  ansible.builtin.import_playbook: diademiemi.vm_utils.terraform_vms
+
+- name: Add DNS records
+  tags: always, vms
+  ansible.builtin.import_playbook: diademiemi.vm_utils.terraform_dns

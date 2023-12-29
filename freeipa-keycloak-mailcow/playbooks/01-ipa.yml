@@ -1,0 +1,26 @@
+---
+- name: Set up FreeIPA
+  hosts: ipa
+  gather_facts: true
+  roles:
+    - { role: freeipa.ansible_freeipa.ipaserver, tags: ['ipa']}
+  pre_tasks:
+    # - name: Remove hostname to loopback from /etc/hosts
+    #   become: true
+    #   ansible.builtin.lineinfile:
+    #     dest: /etc/hosts
+    #     regexp: '.*{{ item }}.*'
+    #     state: absent
+    #   loop:
+    #     - "{{ ansible_hostname }}"
+    #     - "{{ ansible_fqdn }}"
+
+    - name: Refresh facts
+      become: true
+      ansible.builtin.setup:
+
+    - name: Return ansible domain
+      ansible.builtin.debug:
+        msg: "{{ ansible_domain }}, {{ ansible_fqdn }}, {{ ansible_hostname }}. {{ ipa_domain | default(ansible_domain) }}"
+
+...

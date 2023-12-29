@@ -2,9 +2,12 @@
 collections:
   - name: cloud.terraform
     type: git
-    source: https://github.com/ansible-collections/cloud.terraform.git
+    source: https://github.com/diademiemicloud.terraform.git
   - name: freeipa.ansible_freeipa
   - name: middleware_automation.keycloak
+  - name: diademiemi.utils
+  - name: diademiemi.python
+  - name: diademiemi.vm_utils
 
 roles:
   - name: diademiemi.rke2

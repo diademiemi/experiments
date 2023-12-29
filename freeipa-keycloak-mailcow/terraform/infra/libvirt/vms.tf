@@ -1,6 +1,6 @@
-module "vm" {
+module "libvirt_vm" {
   source     = "diademiemi/vm/libvirt"
-  version    = "4.7.1"
+  version    = "5.0.0"
   depends_on = [
     libvirt_network.network,
     null_resource.build-vyos-qcow2
@@ -50,52 +50,16 @@ module "vm" {
 
 }
 
-
-
-
-resource "null_resource" "build-vyos-qcow2" {
-  provisioner "local-exec" {
-    command = <<-EOT
-
-echo "Building VyOS qcow2 image"
-
-# Exit if /tmp/vyos-1.5.0-cloud-init-10G-qemu.qcow2 already exists
-if [ -f /tmp/vyos-1.5.0-cloud-init-10G-qemu.qcow2 ]; then
-  exit 0
-fi
-
-# Remove any existing vyos-vm-images directory
-rm -rf /tmp/vyos-vm-images
-
-cd /tmp
-
-git clone https://github.com/vyos/vyos-vm-images
-
-cd vyos-vm-images
-
-cat >> fix-build-qcow2.patch << EOF
-diff --git a/roles/install-grub/tasks/main.yml b/roles/install-grub/tasks/main.yml
-index 75de819..575dfbf 100644
---- a/roles/install-grub/tasks/main.yml
-+++ b/roles/install-grub/tasks/main.yml
-@@ -15,8 +15,6 @@
-          mount --bind /proc {{ vyos_install_root }}/proc &&
-          mount --bind /sys {{ vyos_install_root }}/sys &&
-          mount --bind {{ vyos_write_root }} {{ vyos_install_root }}/boot 
--  args:
--    warn: no
- 
- - name: Create efi directory
-   become: true
-EOF
-
-git apply fix-build-qcow2.patch
-
-ansible-playbook -b -e "ansible_become_password=${var.local_password}" qemu.yml -e disk_size=5 -e vyos_version=1.5.0 -e cloud_init=true -e cloud_init_ds=NoCloud -e "vyos_iso_url=https://github.com/vyos/vyos-rolling-nightly-builds/releases/download/1.5-rolling-202309250022/vyos-1.5-rolling-202309250022-amd64.iso" -b
-
-echo "File built at /tmp/vyos-1.5.0-cloud-init-10G-qemu.qcow2"
-
-EOT
-
-  }
+# Create list like:
+# - name: "vm"
+#   value: $vm.value.primary_ipv4_address
+#   type: "A"
+#   ttl: 5
+output "dns_records" {
+  depends_on = [module.libvirt_vm]
+  value = [for vm_hostname, vm in module.libvirt_vm : {
+    name: length(split(".", vm.server_domain)) >= 3 ? "${vm_hostname}.${join(".", slice(split(".", vm.server_domain), 0, length(split(".", vm.server_domain)) - 2))}" : vm_hostname
+    value: vm.primary_ipv4_address,  # Replace with the actual attribute for the primary IPv4 address
+    type: "A"
+  }]
 }

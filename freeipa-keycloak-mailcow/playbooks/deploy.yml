@@ -1,0 +1,44 @@
+---
+- name: Preparations
+  tags: apt, cache, always
+  hosts: all
+  tasks:
+    - name: Set preferred domain
+      become: true
+      ansible.builtin.hostname:
+        name: "{{ ansible_hostname }}.{{ new_domain | default(ansible_domain) }}"
+
+    - name: Set preferred domain in /etc/hosts (Fixes Python FQDN error)
+      become: true
+      ansible.builtin.lineinfile:
+        dest: /etc/hosts
+        regexp: '^{{ item }}.*'
+        line: "{{ item }} {{ ansible_hostname }}.{{ new_domain | default(ansible_domain) }} {{ ansible_hostname }}"
+      loop: "{{ ansible_all_ipv4_addresses }}"
+    - name: Refresh apt cache
+      become: true
+      ansible.builtin.apt:
+        update_cache: true
+      changed_when: false
+      when: ansible_pkg_mgr == 'apt'
+
+    - name: Disable unattended upgrades
+      become: true
+      ansible.builtin.apt:
+        name: unattended-upgrades
+        state: absent
+      when: ansible_pkg_mgr == 'apt'
+
+- name: Install IPA
+  tags: ipa, always
+  ansible.builtin.import_playbook: 01-ipa.yml
+
+- name: Install Keycloak
+  tags: keycloak, always
+  ansible.builtin.import_playbook: 02-keycloak.yml
+
+- name: Deploy Mailcow
+  tags: mailcow, always
+  ansible.builtin.import_playbook: 03-mailcow.yml
+
+...

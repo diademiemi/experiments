@@ -1,8 +1,11 @@
 ---
-- name: Set up Keycloak
+- name: Set up SSL
   hosts: keycloak
   gather_facts: true
+
   roles:
+    - diademiemi.utils.selfsigned_ssl
+    - diademiemi.utils.nginx_basic_configs
     - middleware_automation.keycloak.keycloak_quarkus
 
 ...

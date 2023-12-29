@@ -27,9 +27,3 @@ variable "libvirt_pool" {
   type    = string
   default = "default"
 }
-
-variable "local_password" {
-  type    = string
-  description = "Password for the local system, needed to build the VyOS qcow2 image"
-  sensitive = true
-}

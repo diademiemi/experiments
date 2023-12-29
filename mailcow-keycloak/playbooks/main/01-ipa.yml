@@ -1,8 +1,0 @@
----
-- name: Set up FreeIPA
-  hosts: freeipa
-  gather_facts: true
-  roles:
-    - { role: freeipa.ansible_freeipa.ipaserver, tags: ['ipa']}
-
-...

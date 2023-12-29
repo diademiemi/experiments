@@ -1,7 +1,0 @@
----
-- name: Set up Mailcow
-  hosts: mailcow
-  gather_facts: true
-  tasks:
-
-...

@@ -60,8 +60,8 @@ EOT
   {
     hostname = "mailcow"
 
-    vcpu   = 8
-    memory = 16384
+    vcpu   = 4
+    memory = 8192
 
     cloudinit_image = "https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img"
 
@@ -98,10 +98,10 @@ EOT
     ansible_ssh_pass = "root"
   },
   {
-    hostname = "freeipa"
+    hostname = "ipa"
 
-    vcpu   = 8
-    memory = 16384
+    vcpu   = 4
+    memory = 8192
 
     cloudinit_image = "https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-latest.x86_64.qcow2"
 
@@ -159,8 +159,8 @@ EOT
   {
     hostname = "keycloak"
 
-    vcpu   = 8
-    memory = 16384
+    vcpu   = 4
+    memory = 8192
 
     cloudinit_image = "https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-latest.x86_64.qcow2"
 

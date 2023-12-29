@@ -1,0 +1,13 @@
+---
+- name: Set up Mailcow
+  hosts: mailcow
+  gather_facts: true
+  roles:
+  #   - role: diademiemi.python.pip
+  #     vars:
+  #       - python_pip_global_packages:
+  #         - name: docker
+  #         - name: docker-compose
+
+    - diademiemi.mailcow
+...

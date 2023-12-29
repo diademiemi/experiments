@@ -1,0 +1,41 @@
+---
+keycloak_domain: "{{ ansible_domain }}"
+
+keycloak_quarkus_admin_pass: "AdminAdmin123!"
+keycloak_quarkus_host: "keycloak.{{ keycloak_domain }}"
+keycloak_quarkus_frontend_url: "https://keycloak.{{ keycloak_domain }}/auth"
+keycloak_url: "https://keycloak.{{ keycloak_domain }}"
+keycloak_quarkus_http_port: 8080
+keycloak_quarkus_https_port: 8443
+keycloak_quarkus_https_enabled: false
+keycloak_quarkus_cert_file: '/etc/pki/tls/certs/{{ utils_selfsigned_ssl_cert_name }}.pem'
+keycloak_quarkus_key_file: '/etc/pki/tls/private/{{ utils_selfsigned_ssl_cert_name }}.key'
+keycloak_quarkus_http_relative_path: '/'
+# keycloak_quarkus_https_enabled: true
+keycloak_quarkus_bind_address: 0.0.0.0
+
+utils_selfsigned_ssl_cert_owner: keycloak
+utils_selfsigned_ssl_cert_group: keycloak
+utils_selfsigned_ssl_cert_name: "keycloak"
+
+nginx_basic_configs_basic_rev_proxies:
+  - config_name: keycloak.{{ keycloak_domain }}
+    server_name: keycloak.{{ keycloak_domain }}
+    cert_path: '/etc/pki/tls/certs/{{ utils_selfsigned_ssl_cert_name }}.pem'
+    key_path: '/etc/pki/tls/private/{{ utils_selfsigned_ssl_cert_name }}.key'
+    external_ip: 0.0.0.0
+    external_http_port: 80
+    external_https_port: 443
+    https: true
+    locations:
+      - location: /
+        custom: false
+        proxy_pass: http://127.0.0.1:8080
+        proxy_standard_headers: true
+        extra_lines:
+          - proxy_http_version 1.1;
+          # - "proxy_intercept_errors on;"
+          - client_max_body_size 20M;
+
+
+...
